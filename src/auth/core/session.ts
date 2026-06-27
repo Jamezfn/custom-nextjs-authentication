@@ -20,7 +20,7 @@ export type Cookies = {
             secure?: boolean
             httpOnly?: boolean
             sameSite?: "strict" | "lax"
-            expires?: number
+            expires?: Date
         }
     ) => void
     get: (key: string) => { name: string, value: string } | undefined
@@ -28,17 +28,18 @@ export type Cookies = {
 };
 
 function setCookie(sessionId: string, cookies: Pick<Cookies, "set">) {
+    console.log("Setting cookie:", sessionId);
     cookies.set(COOKIE_SESSION_KEY, sessionId, {
         secure: true,
         httpOnly: true,
         sameSite: "strict",
-        expires: Date.now() + SESSION_EXPIRATION_SECONDS * 1000,
+        expires: new Date(Date.now() + SESSION_EXPIRATION_SECONDS * 1000),
     })
 }
 
 export async function createUserSession(user: UserSession, cookies: Pick<Cookies, "set">) {
     const sessionId = crypto.randomBytes(512).toString("hex").normalize();
-    await redisClient.set(`session:${sessionId}`, sessionSchema.parse(user), {
+    await redisClient.set(`session:${sessionId}`, JSON.stringify(sessionSchema.parse(user)), {
         ex: SESSION_EXPIRATION_SECONDS
     });
 
@@ -57,4 +58,12 @@ export async function getUserFromSession(cookies: Pick<Cookies, 'get'>) {
     if (sessionId == null) return null;
 
     return await getUserSessionById(sessionId);
+}
+
+export async function removeUserFrmSession(cookies: Pick<Cookies, 'get' | 'delete'>) {
+    const sessionId = cookies.get(COOKIE_SESSION_KEY)?.value;
+    if (sessionId == null) return null;
+
+    await redisClient.del(`session:${sessionId}`);
+    cookies.delete(COOKIE_SESSION_KEY);
 }

@@ -7,7 +7,7 @@ import { db } from "@/drizzle/db";
 import { eq } from "drizzle-orm";
 import { UserTable } from "@/drizzle/schema";
 import { comparePwd, genSalt, hashPassword } from "../core/passwordHasher";
-import { createUserSession } from "../core/session";
+import { createUserSession, removeUserFrmSession } from "../core/session";
 import { cookies } from "next/headers";
 
 export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
@@ -31,8 +31,8 @@ export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
     });
 
     if (!isCorrectPwd) return "Unable to log you in";
-
-    await createUserSession(user, await cookies())
+    await createUserSession(user, await cookies());
+    
     redirect("/");
 }
 
@@ -71,6 +71,7 @@ export async function signUp(unsafeData: z.infer<typeof signUpSchema>) {
 }
 
 export async function logOut() {
+    await removeUserFrmSession(await cookies());
     redirect("/");
 }
 

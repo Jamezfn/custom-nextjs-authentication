@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ToggleRoleButton } from "./ToggleRoleButton";
+import { getCurrentUser } from "@/auth/nextjs/currentUser";
 
 
 export default async function PrivatePage() {
-    const currentUser = { role: "user" }
+    const currentUser = await getCurrentUser({ redirectIfNotFound: true });
 
     return (
         <div className="container mx-auto p-4">
