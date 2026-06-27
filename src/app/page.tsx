@@ -1,4 +1,5 @@
 import { LogOutButton } from "@/auth/nextjs/components/LogOutButton"
+import { getCurrentUser } from "@/auth/nextjs/currentUser";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -10,11 +11,11 @@ import {
 import Link from "next/link"
 
 export default async function HomePage() {
-  const fullUser = { id: "", name: "James", role: "user" }
+  const user = await getCurrentUser();
 
   return (
     <div className="container mx-auto p-4">
-      {fullUser == null ? (
+      {user == null ? (
         <div className="flex gap-4">
 			<Button asChild>
 				<Link href="/sign-in">Sign In</Link>
@@ -26,14 +27,14 @@ export default async function HomePage() {
       ) : (
         <Card className="max-w-125 mt-4">
 			<CardHeader>
-				<CardTitle>User: {fullUser.name}</CardTitle>
-				<CardDescription>Role: {fullUser.role}</CardDescription>
+				<CardTitle>User: {user.id}</CardTitle>
+				<CardDescription>Role: {user.role}</CardDescription>
 			</CardHeader>
 			<CardFooter className="flex gap-4">
 				<Button asChild variant="outline">
 					<Link href="/private">Private Page</Link>
 				</Button>
-				{fullUser.role === "admin" && (
+				{user.role === "admin" && (
 				<Button asChild variant="outline">
 					<Link href="/admin">Admin Page</Link>
 				</Button>
