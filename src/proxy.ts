@@ -32,7 +32,7 @@ export async function proxy(request: NextRequest) {
             response.cookies.set({ ...options, name: key, value })
         },
         get: key => request.cookies.get(key)
-    })
+    });
 
     return response;
 }

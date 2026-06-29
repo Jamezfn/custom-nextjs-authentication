@@ -5,10 +5,11 @@ import { redirect } from "next/navigation"
 import { signInSchema, signUpSchema } from "./schemas";
 import { db } from "@/drizzle/db";
 import { eq } from "drizzle-orm";
-import { UserTable } from "@/drizzle/schema";
+import { oAuthProvider, UserTable } from "@/drizzle/schema";
 import { comparePwd, genSalt, hashPassword } from "../core/passwordHasher";
 import { createUserSession, removeUserFrmSession } from "../core/session";
 import { cookies } from "next/headers";
+import { getOAuthClient } from "../core/oauth/base";
 
 export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
     const { success, data } = signInSchema.safeParse(unsafeData);
@@ -20,7 +21,7 @@ export async function signIn(unsafeData: z.infer<typeof signInSchema>) {
         where: eq(UserTable.email, data.email),
     });
 
-    if (user == null) {
+    if (user == null || user.password == null || user.salt == null) {
         return "Unable to log you in";
     }
 
@@ -75,6 +76,8 @@ export async function logOut() {
     redirect("/");
 }
 
-export async function oAuthSignIn() {
-    redirect("/")
+export async function oAuthSignIn(provider: oAuthProvider) {
+    const oAuthClient = getOAuthClient(provider);
+
+    redirect(oAuthClient.createAuthUrl(await cookies()));
 }
